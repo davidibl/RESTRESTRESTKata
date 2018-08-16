@@ -10,6 +10,7 @@ import static de.lv1871.dms.Vertragsauskunft.operation.Lambda.orThrow;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class VertragService {
 		return Arrays.asList(kundennummer)
 			.stream()
 			.map(kundenRepo::getKunde)
-			.map(orThrow(() -> "Der Kunde konnte nicht gefunden werden"))
+			.map(orThrow(notFoundException.apply("Der Kunde konnte nicht gefunden werden")))
 			.map(Kunde::getVertraege)
 			.flatMap(v -> v.stream())
 			.map(vertragRepo::getVertrag)
@@ -59,7 +60,7 @@ public class VertragService {
 		// @formatter:off
 		return getGueltigenBeitrag(versicherungsnummer)
 				.map(Beitrag::getZahlbeitrag)
-				.orElseThrow(notFoundException);
+				.orElseThrow(notFoundException.apply("Beitrag wurde nicht gefunden"));
 		// @formatter:on
 	}
 
@@ -72,7 +73,7 @@ public class VertragService {
 									multiplyWith12(),
 									Beitrag::getZahlbeitrag))
 				.map(Beitrag::getZahlbeitrag)
-				.orElseThrow(badRequestException);
+				.orElseThrow(badRequestException.apply("Fehler bei der Verarbeitung"));
 		// @formatter:on
 	}
 
@@ -85,8 +86,10 @@ public class VertragService {
 		// @formatter:on
 	}
 
-	private Supplier<InternalServerErrorException> badRequestException = () -> new InternalServerErrorException();
-	private Supplier<ResourceNotFoundException> notFoundException = () -> new ResourceNotFoundException();
+	private Function<String, Supplier<InternalServerErrorException>> badRequestException = message -> () -> new InternalServerErrorException(
+			message);
+	private Function<String, Supplier<ResourceNotFoundException>> notFoundException = message -> () -> new ResourceNotFoundException(
+			message);
 	private Predicate<Beitrag> isMonatlicheZahlweise = equal(Beitrag::getZahlweise, () -> Zahlweise.MONATLICH);
 	private Predicate<Vertrag> vertragGueltig = notEqual(Vertrag::getStatus, () -> Vertragsstatus.GESPERRT);
 

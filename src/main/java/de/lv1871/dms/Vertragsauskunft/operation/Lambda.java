@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 
 public class Lambda {
 
-	public static <T> Function<Optional<T>, T> orThrow(Supplier<String> exceptionMessageSupplier) {
-		return (optional) -> optional.orElseThrow(() -> new RuntimeException(exceptionMessageSupplier.get()));
+	public static <T> Function<Optional<T>, T> orThrow(Supplier<? extends RuntimeException> exceptionMessageSupplier) {
+		return (optional) -> optional.orElseThrow(exceptionMessageSupplier);
 	}
 
 	public static <T> Function<Optional<T>, T> orNull() {

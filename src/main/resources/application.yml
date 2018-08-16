@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: development
+
+---
+
+spring:
+  profiles: development
+server:
+  port: 11315
+logging:
+  file: log.log
+  level:
+    org:
+      springframework:
+        web: INFO
